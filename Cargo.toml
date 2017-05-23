@@ -14,4 +14,4 @@ version = "^2.24.2"
 features = ["color"]
 
 [profile.release]
-debug = true
+lto = true
