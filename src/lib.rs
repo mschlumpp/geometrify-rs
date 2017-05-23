@@ -188,7 +188,7 @@ impl Geometrify {
         )
     }
 
-    fn difference(first: Rgba<u8>, second: Rgba<u8>) -> i32 {
+    fn difference(first: Rgba<u8>, second: Rgba<u8>) -> u32 {
         let (r1, g1, b1, a1) = first.channels4();
         let (r2, g2, b2, a2) = second.channels4();
         let mut d = 0i32;
@@ -198,30 +198,67 @@ impl Geometrify {
         d += i32::abs((b1 as i32 - b2 as i32));
         d += i32::abs((a1 as i32 - a2 as i32));
 
-        d
+        d as u32
     }
 
-    fn calculate_difference(original: &RgbaImage, current: &RgbaImage, primitive: &Primitive) -> i32 {
+    fn calculate_difference(original: &RgbaImage, current: &RgbaImage, diff_lut: &Vec<u64>, primitive: &Primitive) -> u64 {
         let bb = primitive.bounding_box();
 
-        let mut d = 0i32;
+        // Use LUT to calculate difference outside of the BB
+        // TODO: Check whether indices are correct!
+        let mut d = diff_lut[diff_lut.len() - 1];
+        if bb.bottom_right.y > 0 && bb.bottom_right.x > 0 {
+            d -= diff_lut[((bb.bottom_right.y - 1) as u32 * current.width() + bb.bottom_right.x as u32 - 1) as usize];
+        }
+        if bb.top_left.y > 0 && bb.bottom_right.x > 0 {
+            d += diff_lut[((bb.top_left.y - 1) as u32 * current.width() + bb.bottom_right.x as u32 - 1) as usize];
+        }
+        if bb.bottom_right.y > 0 && bb.top_left.x > 0 {
+            d += diff_lut[((bb.bottom_right.y - 1) as u32 * current.width() + bb.top_left.x as u32 - 1) as usize];
+        }
+        if bb.top_left.y > 0 && bb.top_left.x > 0 {
+            d -= diff_lut[((bb.top_left.y - 1) as u32 * current.width() + bb.top_left.x as u32 - 1) as usize];
+        }
 
-        for y in 0..original.height() {
-            for x in 0..original.width() {
-                let originalRgb = original.get_pixel(x, y);
-                let resultRgb = if (bb.top_left.x as u32 <= x) && (x <= bb.bottom_right.x as u32)
-                    && (bb.top_left.y as u32 <= y) && (y <= bb.bottom_right.y as u32)
+        for y in bb.top_left.y..bb.bottom_right.y {
+            for x in bb.top_left.x..bb.bottom_right.x {
+                let originalRgb = original.get_pixel(x as u32, y as u32);
+                let resultRgb = if (bb.top_left.x as u32 <= x as u32) && (x as u32 <= bb.bottom_right.x as u32)
+                    && (bb.top_left.y as u32 <= y as u32) && (y as u32 <= bb.bottom_right.y as u32)
                     && (primitive.is_inside_primitive(Point { x: x as i32, y: y as i32 })) {
-                        Geometrify::mixColor(*current.get_pixel(x, y), primitive.get_color().expect("triangle color not "))
+                        Geometrify::mixColor(*current.get_pixel(x as u32, y as u32), primitive.get_color().expect("triangle color not "))
                     } else {
-                        *current.get_pixel(x, y)
+                        *current.get_pixel(x as u32, y as u32)
                     };
 
-                d += Geometrify::difference(*originalRgb, resultRgb);
+                d += Geometrify::difference(*originalRgb, resultRgb) as u64;
             }
         }
 
         d
+    }
+
+    fn calculate_difference_lut(a: &RgbaImage, b: &RgbaImage) -> Vec<u64> {
+        let mut result = Vec::new();
+
+        for y in 0..a.height() {
+            for x in 0..a.width() {
+                let mut ldiff = Geometrify::difference(*a.get_pixel(x, y), *b.get_pixel(x, y)) as u64;
+                if x > 0 {
+                    ldiff += result[(y * a.width() + x - 1) as usize];
+                }
+                if y > 0 {
+                    ldiff += result[((y - 1) * a.width() + x) as usize];
+                }
+                if x > 0 && y > 0 {
+                    ldiff -= result[((y - 1) * a.width() + x - 1) as usize];
+                }
+
+                result.push(ldiff);
+            }
+        }
+
+        result
     }
 
     pub fn apply(&mut self, image: RgbaImage, numberOfIterations: i32, numberOfSamples: i32) -> RgbaImage {
@@ -231,6 +268,8 @@ impl Geometrify {
         let mut destination = RgbaImage::new(image.width(), image.height());
 
         for _ in 0..numberOfIterations {
+            let difference_lut = Geometrify::calculate_difference_lut(&image, &destination);
+
             let minPrimitive = (0..numberOfSamples)
                 .map(|_| {
                     self.generate_primitive()
@@ -239,7 +278,7 @@ impl Geometrify {
                 .map(|primitive| {
                     let mut prim = *primitive;
                     prim.color = Some(Geometrify::calculate_color(&image, &prim));
-                    (prim, Geometrify::calculate_difference(&image, &destination, &prim))
+                    (prim, Geometrify::calculate_difference(&image, &destination, &difference_lut, &prim))
                 })
                 .min_by_key(|tup| tup.1);
 
