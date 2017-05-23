@@ -1,0 +1,12 @@
+[package]
+name = "geometrify"
+version = "0.1.0"
+authors = ["Marco Schlumpp <marco.schlumpp@gmail.com>"]
+
+[dependencies]
+image = "^0.13.0"
+rand = "^0.3"
+rayon = "^0.7.0"
+
+[profile.release]
+debug = true
