@@ -29,6 +29,13 @@ struct BoundingBox {
     bottom_right: Point,
 }
 
+trait Primitive {
+    fn is_inside_primitive(&self, p: Point) -> bool;
+    fn bounding_box(&self) -> BoundingBox;
+    fn get_color(&self) -> Option<Rgba<u8>>;
+    fn set_color(&mut self, color: Rgba<u8>);
+}
+
 #[derive(Debug, Copy, Clone)]
 struct Triangle {
     a: Point,
@@ -46,13 +53,9 @@ impl Triangle {
             color: None,
         }
     }
+}
 
-    // fn set_color(&mut self, c: Color) {
-    //     self.color = Some(c);
-    // }
-
-    // fn get_color(&)
-
+impl Primitive for Triangle {
     fn is_inside_primitive(&self, p: Point) -> bool {
         let spanA = Point { x: self.b.x - self.a.x, y: self.b.y - self.a.y };
         let spanB = Point { x: self.c.x - self.a.x, y: self.c.y - self.a.y };
@@ -65,7 +68,7 @@ impl Triangle {
         (s >= 0.0) && (t >= 0.0) && ((s + t) <= 1.0)
     }
 
-    fn get_bounding_box(&self) -> BoundingBox {
+    fn bounding_box(&self) -> BoundingBox {
         use std::cmp::{min, max};
         BoundingBox {
             top_left: Point {
@@ -77,6 +80,14 @@ impl Triangle {
                 y: max(max(self.a.y, self.b.y), self.c.y),
             }
         }
+    }
+
+    fn get_color(&self) -> Option<Rgba<u8>> {
+        self.color
+    }
+
+    fn set_color(&mut self, color: Rgba<u8>) {
+        self.color = Some(color);
     }
 }
 
@@ -114,8 +125,8 @@ impl Geometrify {
         }
     }
 
-    fn calculate_color(image: &RgbaImage, primitive: Triangle) -> Rgba<u8> {
-        let bb = primitive.get_bounding_box();
+    fn calculate_color(image: &RgbaImage, primitive: &Primitive) -> Rgba<u8> {
+        let bb = primitive.bounding_box();
 
         let mut count = 0u64;
         let mut cr = 0u64;
@@ -150,8 +161,8 @@ impl Geometrify {
                       self.point_gen.next_point())
     }
 
-    fn add_to_image(image: &mut RgbaImage, primitive: Triangle) {
-        let bb = primitive.get_bounding_box();
+    fn add_to_image(image: &mut RgbaImage, primitive: &Primitive) {
+        let bb = primitive.bounding_box();
 
         for y in bb.top_left.y..bb.bottom_right.y {
             for x in bb.top_left.x..bb.bottom_right.x {
@@ -159,7 +170,7 @@ impl Geometrify {
         //     for x in 0..image.width() {
                 let p = Point {x: x as i32, y: y as i32};
                 if primitive.is_inside_primitive(p) {
-                    *image.get_pixel_mut(x as u32, y as u32) = Geometrify::mixColor(primitive.color.expect("color of triangle not set"), *image.get_pixel(x as u32, y as u32));
+                    *image.get_pixel_mut(x as u32, y as u32) = Geometrify::mixColor(primitive.get_color().expect("color of triangle not set"), *image.get_pixel(x as u32, y as u32));
                 }
             }
         }
@@ -190,8 +201,8 @@ impl Geometrify {
         d
     }
 
-    fn calculate_difference(original: &RgbaImage, current: &RgbaImage, primitive: Triangle) -> i32 {
-        let bb = primitive.get_bounding_box();
+    fn calculate_difference(original: &RgbaImage, current: &RgbaImage, primitive: &Primitive) -> i32 {
+        let bb = primitive.bounding_box();
 
         let mut d = 0i32;
 
@@ -201,7 +212,7 @@ impl Geometrify {
                 let resultRgb = if (bb.top_left.x as u32 <= x) && (x <= bb.bottom_right.x as u32)
                     && (bb.top_left.y as u32 <= y) && (y <= bb.bottom_right.y as u32)
                     && (primitive.is_inside_primitive(Point { x: x as i32, y: y as i32 })) {
-                        Geometrify::mixColor(*current.get_pixel(x, y), primitive.color.expect("triangle color not "))
+                        Geometrify::mixColor(*current.get_pixel(x, y), primitive.get_color().expect("triangle color not "))
                     } else {
                         *current.get_pixel(x, y)
                     };
@@ -227,12 +238,12 @@ impl Geometrify {
                 .par_iter()
                 .map(|primitive| {
                     let mut prim = *primitive;
-                    prim.color = Some(Geometrify::calculate_color(&image, prim));
-                    (prim, Geometrify::calculate_difference(&image, &destination, prim))
+                    prim.color = Some(Geometrify::calculate_color(&image, &prim));
+                    (prim, Geometrify::calculate_difference(&image, &destination, &prim))
                 })
                 .min_by_key(|tup| tup.1);
 
-            Geometrify::add_to_image(&mut destination, minPrimitive.expect("no fitting triangle found").0);
+            Geometrify::add_to_image(&mut destination, &minPrimitive.expect("no fitting triangle found").0);
             progress.inc();
         }
         progress.finish_print("done");
