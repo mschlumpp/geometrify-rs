@@ -44,7 +44,7 @@ fn main() {
     let mut filter = Geometrify::new(RandomPointGenerator::new(sourcebuf.width() as i32, sourcebuf.height() as i32));
 
 
-    let outputbuf = filter.apply(sourcebuf, matches.value_of("iterations").unwrap_or("100").parse::<i32>().expect("invalid iterations parameter"), 100);
+    let outputbuf = filter.apply(sourcebuf, matches.value_of("iterations").unwrap_or("100").parse::<i32>().expect("invalid iterations parameter"), matches.value_of("samples").unwrap_or("50").parse::<i32>().expect("invalid samples parameter"));
 
     outputbuf.save(&Path::new(matches.value_of("OUTPUT").expect("expected output file"))).expect("Can't save image");
 }
