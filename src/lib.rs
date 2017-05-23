@@ -6,6 +6,8 @@ use image::{Rgba, RgbaImage, Pixel};
 
 use rand::Rng;
 
+use rayon::prelude::*;
+
 #[derive(Clone, Copy, Debug)]
 struct Point {
     x: i32,
@@ -212,22 +214,16 @@ impl Geometrify {
         let mut destination = RgbaImage::new(image.width(), image.height());
 
         for _ in 0..numberOfIterations {
-            let mut minDifference = i32::max_value();
-            let mut minPrimitive = None;
+            let minPrimitive = (0..numberOfSamples).map(|_| {
+                self.generate_primitive()
+            }).collect::<Vec<Triangle>>().par_iter()
+                .map(|primitive| {
+                    let mut prim = *primitive;
+                    prim.color = Some(Geometrify::calculate_color(&image, prim));
+                    (prim, Geometrify::calculate_difference(&image, &destination, prim))
+                }).min_by_key(|tup| tup.1);
 
-            for _ in 0..numberOfSamples {
-                let mut primitive = self.generate_primitive();
-                let color = Geometrify::calculate_color(&image, primitive);
-                primitive.color = Some(color);
-
-                let diff = Geometrify::calculate_difference(&image, &destination, primitive);
-                if (diff < minDifference) {
-                    minDifference = diff;
-                    minPrimitive = Some(primitive);
-                }
-            }
-
-            Geometrify::add_to_image(&mut destination, minPrimitive.expect("no fitting triangle found"));
+            Geometrify::add_to_image(&mut destination, minPrimitive.expect("no fitting triangle found").0);
         }
 
         destination
