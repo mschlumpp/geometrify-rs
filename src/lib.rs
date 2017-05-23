@@ -1,12 +1,15 @@
 extern crate image;
 extern crate rand;
 extern crate rayon;
+extern crate pbr;
 
 use image::{Rgba, RgbaImage, Pixel};
 
 use rand::Rng;
 
 use rayon::prelude::*;
+
+use pbr::ProgressBar;
 
 #[derive(Clone, Copy, Debug)]
 struct Point {
@@ -211,20 +214,28 @@ impl Geometrify {
     }
 
     pub fn apply(&mut self, image: RgbaImage, numberOfIterations: i32, numberOfSamples: i32) -> RgbaImage {
+        let mut progress = ProgressBar::new(numberOfIterations as u64);
+        progress.format("|#--|");
+
         let mut destination = RgbaImage::new(image.width(), image.height());
 
         for _ in 0..numberOfIterations {
-            let minPrimitive = (0..numberOfSamples).map(|_| {
-                self.generate_primitive()
-            }).collect::<Vec<Triangle>>().par_iter()
+            let minPrimitive = (0..numberOfSamples)
+                .map(|_| {
+                    self.generate_primitive()
+                }).collect::<Vec<Triangle>>()
+                .par_iter()
                 .map(|primitive| {
                     let mut prim = *primitive;
                     prim.color = Some(Geometrify::calculate_color(&image, prim));
                     (prim, Geometrify::calculate_difference(&image, &destination, prim))
-                }).min_by_key(|tup| tup.1);
+                })
+                .min_by_key(|tup| tup.1);
 
             Geometrify::add_to_image(&mut destination, minPrimitive.expect("no fitting triangle found").0);
+            progress.inc();
         }
+        progress.finish_print("done");
 
         destination
     }

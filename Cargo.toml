@@ -7,6 +7,7 @@ authors = ["Marco Schlumpp <marco.schlumpp@gmail.com>"]
 image = "^0.13.0"
 rand = "^0.3"
 rayon = "^0.7.0"
+pbr = "^1.0.0"
 
 [profile.release]
 debug = true
