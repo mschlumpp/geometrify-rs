@@ -42,6 +42,8 @@ struct Triangle {
     b: Point,
     c: Point,
     color: Option<Rgba<u8>>,
+
+    spanDiv: Option<f32>,
 }
 
 impl Triangle {
@@ -51,6 +53,23 @@ impl Triangle {
             b: b,
             c: c,
             color: None,
+            spanDiv: None,
+        }
+    }
+
+    fn spanDivSave(&mut self) {
+        self.spanDiv = Some(self.spanDiv());
+    }
+
+    fn spanDiv(&self) -> f32 {
+        match self.spanDiv {
+            Some(div) => div,
+            None => {
+                let spanA = Point { x: self.b.x - self.a.x, y: self.b.y - self.a.y };
+                let spanB = Point { x: self.c.x - self.a.x, y: self.c.y - self.a.y };
+
+                1.0 / spanA.cross_product(spanB) as f32
+            }
         }
     }
 }
@@ -62,8 +81,8 @@ impl Primitive for Triangle {
 
         let q = Point { x: p.x - self.a.x, y: p.y - self.a.y };
 
-        let s = q.cross_product(spanB) as f32 / spanA.cross_product(spanB) as f32;
-        let t = spanA.cross_product(q) as f32 / spanA.cross_product(spanB) as f32;
+        let s = q.cross_product(spanB) as f32 * self.spanDiv();
+        let t = spanA.cross_product(q) as f32 * self.spanDiv();
 
         (s >= 0.0) && (t >= 0.0) && ((s + t) <= 1.0)
     }
@@ -270,11 +289,15 @@ impl Geometrify {
         for _ in 0..numberOfIterations {
             let difference_lut = Geometrify::calculate_difference_lut(&image, &destination);
 
-            let minPrimitive = (0..numberOfSamples)
+            let primitives = (0..numberOfSamples)
                 .map(|_| {
                     self.generate_primitive()
-                }).collect::<Vec<Triangle>>()
-                .par_iter()
+                })
+                .map(|mut p| {
+                    p.spanDivSave();
+                    p
+                }).collect::<Vec<Triangle>>();
+            let minPrimitive =  primitives.par_iter()
                 .map(|primitive| {
                     let mut prim = *primitive;
                     prim.color = Some(Geometrify::calculate_color(&image, &prim));
