@@ -297,7 +297,7 @@ impl Geometrify {
                     p.spanDivSave();
                     p
                 }).collect::<Vec<Triangle>>();
-            let minPrimitive =  primitives.par_iter()
+            let minPrimitive = primitives.par_iter()
                 .map(|primitive| {
                     let mut prim = *primitive;
                     prim.color = Some(Geometrify::calculate_color(&image, &prim));
