@@ -139,6 +139,12 @@ impl RandomPointGenerator {
     }
 }
 
+impl Default for RandomPointGenerator {
+    fn default() -> Self {
+        RandomPointGenerator::new()
+    }
+}
+
 impl PointGenerator for RandomPointGenerator {
     fn next_point(&mut self, width: u32, height: u32) -> Point {
         Point {
@@ -236,10 +242,10 @@ impl Geometrify {
         let (r2, g2, b2, a2) = second.channels4();
 
         Rgba::from_channels(
-            ((((r1 as u32 + r2 as u32)) / 2) as u8),
-            ((((g1 as u32 + g2 as u32)) / 2) as u8),
-            ((((b1 as u32 + b2 as u32)) / 2) as u8),
-            ((((a1 as u32 + a2 as u32)) / 2) as u8),
+            (((r1 as u32 + r2 as u32) / 2) as u8),
+            (((g1 as u32 + g2 as u32) / 2) as u8),
+            (((b1 as u32 + b2 as u32) / 2) as u8),
+            (((a1 as u32 + a2 as u32) / 2) as u8),
         )
     }
 
@@ -248,17 +254,17 @@ impl Geometrify {
         let (r2, g2, b2, a2) = second.channels4();
         let mut d = 0i32;
 
-        d += i32::abs((r1 as i32 - r2 as i32));
-        d += i32::abs((g1 as i32 - g2 as i32));
-        d += i32::abs((b1 as i32 - b2 as i32));
-        d += i32::abs((a1 as i32 - a2 as i32));
+        d += i32::abs(r1 as i32 - r2 as i32);
+        d += i32::abs(g1 as i32 - g2 as i32);
+        d += i32::abs(b1 as i32 - b2 as i32);
+        d += i32::abs(a1 as i32 - a2 as i32);
 
         d as u32
     }
 
     fn calculate_difference(original: &RgbaImage,
                             current: &RgbaImage,
-                            diff_lut: &Vec<u64>,
+                            diff_lut: &[u64],
                             primitive: &Primitive)
                             -> u64 {
         let bb = primitive.bounding_box();
