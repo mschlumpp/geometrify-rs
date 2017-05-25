@@ -135,9 +135,7 @@ pub struct RandomPointGenerator {
 
 impl RandomPointGenerator {
     pub fn new() -> RandomPointGenerator {
-        RandomPointGenerator {
-            rng: Box::new(rand::thread_rng()),
-        }
+        RandomPointGenerator { rng: Box::new(rand::weak_rng()) }
     }
 }
 
