@@ -4,7 +4,9 @@ extern crate clap;
 
 
 use clap::{Arg, App, AppSettings};
-use geometrify::{RandomPointGenerator, Geometrify};
+
+use geometrify::RandomPointGenerator;
+use geometrify::geometrify::Geometrify;
 
 use image::open;
 use std::path::Path;
