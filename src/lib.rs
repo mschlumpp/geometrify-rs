@@ -150,11 +150,25 @@ impl PointGenerator for RandomPointGenerator {
 
 pub struct Geometrify {
     point_gen: Box<RandomPointGenerator>,
+    iterations: u32,
+    samples: u32,
 }
 
 impl Geometrify {
-    pub fn new(point_gen: Box<RandomPointGenerator>) -> Geometrify {
-        Geometrify { point_gen: point_gen }
+    pub fn new(point_gen: Box<RandomPointGenerator>, iterations: u32, samples: u32) -> Geometrify {
+        Geometrify {
+            point_gen: point_gen,
+            iterations: iterations,
+            samples: samples,
+        }
+    }
+
+    pub fn set_iterations(&mut self, iterations: u32) {
+        self.iterations = iterations
+    }
+
+    pub fn set_samples(&mut self, samples: u32) {
+        self.samples = samples
     }
 
     fn calculate_color(image: &RgbaImage, primitive: &Primitive) -> Rgba<u8> {
@@ -321,20 +335,16 @@ impl Geometrify {
         result
     }
 
-    pub fn apply(&mut self,
-                 image: RgbaImage,
-                 number_of_iterations: i32,
-                 number_of_samples: i32)
-                 -> RgbaImage {
-        let mut progress = ProgressBar::new(number_of_iterations as u64);
+    pub fn apply(&mut self, image: RgbaImage) -> RgbaImage {
+        let mut progress = ProgressBar::new(self.iterations as u64);
         progress.format("|#--|");
 
         let mut destination = RgbaImage::new(image.width(), image.height());
 
-        for _ in 0..number_of_iterations {
+        for _ in 0..self.iterations {
             let difference_lut = Geometrify::calculate_difference_lut(&image, &destination);
 
-            let primitives = (0..number_of_samples)
+            let primitives = (0..self.samples)
                 .map(|_| self.generate_primitive(image.width(), image.height()))
                 .map(
                     |mut p| {

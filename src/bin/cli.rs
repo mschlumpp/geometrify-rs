@@ -50,22 +50,22 @@ fn main() {
 
 
     let pointgen = Box::new(RandomPointGenerator::new());
-    let mut filter = Geometrify::new(pointgen);
-
-
-    let outputbuf = filter.apply(
-        sourcebuf,
+    let mut filter = Geometrify::new(
+        pointgen,
         matches
             .value_of("iterations")
             .unwrap_or("100")
-            .parse::<i32>()
+            .parse::<u32>()
             .expect("invalid iterations parameter"),
         matches
             .value_of("samples")
             .unwrap_or("50")
-            .parse::<i32>()
+            .parse::<u32>()
             .expect("invalid samples parameter"),
     );
+
+
+    let outputbuf = filter.apply(sourcebuf);
 
     outputbuf
         .save(&Path::new(matches.value_of("OUTPUT").expect("expected output file")))
