@@ -1,3 +1,5 @@
 target/
 **/*.rs.bk
 Cargo.lock
+/geometrify-rust.iml
+/.idea/
