@@ -2,6 +2,7 @@
 name = "geometrify"
 version = "0.1.0"
 authors = ["Marco Schlumpp <marco.schlumpp@gmail.com>"]
+license = "MPL-2.0"
 
 [dependencies]
 image = "^0.13.0"
@@ -27,6 +28,10 @@ optional = true
 
 [features]
 web = ["rocket", "rocket_codegen"]
+
+[[bin]]
+name = "cli"
+path = "src/bin/cli.rs"
 
 [[bin]]
 name = "web"
