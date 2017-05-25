@@ -5,11 +5,11 @@ extern crate pbr;
 
 use image::{Rgba, RgbaImage, Pixel};
 
+use pbr::ProgressBar;
+
 use rand::Rng;
 
 use rayon::prelude::*;
-
-use pbr::ProgressBar;
 
 #[derive(Clone, Copy, Debug)]
 struct Point {
@@ -65,8 +65,14 @@ impl Triangle {
         match self.span_div {
             Some(div) => div,
             None => {
-                let span_a = Point { x: self.b.x - self.a.x, y: self.b.y - self.a.y };
-                let span_b = Point { x: self.c.x - self.a.x, y: self.c.y - self.a.y };
+                let span_a = Point {
+                    x: self.b.x - self.a.x,
+                    y: self.b.y - self.a.y,
+                };
+                let span_b = Point {
+                    x: self.c.x - self.a.x,
+                    y: self.c.y - self.a.y,
+                };
 
                 1.0 / span_a.cross_product(span_b) as f32
             }
@@ -76,10 +82,19 @@ impl Triangle {
 
 impl Primitive for Triangle {
     fn is_inside_primitive(&self, p: Point) -> bool {
-        let span_a = Point { x: self.b.x - self.a.x, y: self.b.y - self.a.y };
-        let span_b = Point { x: self.c.x - self.a.x, y: self.c.y - self.a.y };
+        let span_a = Point {
+            x: self.b.x - self.a.x,
+            y: self.b.y - self.a.y,
+        };
+        let span_b = Point {
+            x: self.c.x - self.a.x,
+            y: self.c.y - self.a.y,
+        };
 
-        let q = Point { x: p.x - self.a.x, y: p.y - self.a.y };
+        let q = Point {
+            x: p.x - self.a.x,
+            y: p.y - self.a.y,
+        };
 
         let s = q.cross_product(span_b) as f32 * self.span_div();
         let t = span_a.cross_product(q) as f32 * self.span_div();
@@ -97,7 +112,7 @@ impl Primitive for Triangle {
             bottom_right: Point {
                 x: max(max(self.a.x, self.b.x), self.c.x),
                 y: max(max(self.a.y, self.b.y), self.c.y),
-            }
+            },
         }
     }
 
@@ -139,9 +154,7 @@ pub struct Geometrify {
 
 impl Geometrify {
     pub fn new(point_gen: RandomPointGenerator) -> Geometrify {
-        Geometrify {
-            point_gen: point_gen
-        }
+        Geometrify { point_gen: point_gen }
     }
 
     fn calculate_color(image: &RgbaImage, primitive: &Primitive) -> Rgba<u8> {
@@ -167,17 +180,21 @@ impl Geometrify {
         if count == 0 {
             Rgba::from_channels(255, 255, 255, 255)
         } else {
-            Rgba::from_channels((cr / count) as u8,
-                                (cg / count) as u8,
-                                (cb / count) as u8,
-                                (ca / count) as u8)
+            Rgba::from_channels(
+                (cr / count) as u8,
+                (cg / count) as u8,
+                (cb / count) as u8,
+                (ca / count) as u8,
+            )
         }
     }
 
     fn generate_primitive(&mut self) -> Triangle {
-        Triangle::new(self.point_gen.next_point(),
-                      self.point_gen.next_point(),
-                      self.point_gen.next_point())
+        Triangle::new(
+            self.point_gen.next_point(),
+            self.point_gen.next_point(),
+            self.point_gen.next_point(),
+        )
     }
 
     fn add_to_image(image: &mut RgbaImage, primitive: &Primitive) {
@@ -185,11 +202,16 @@ impl Geometrify {
 
         for y in bb.top_left.y..bb.bottom_right.y {
             for x in bb.top_left.x..bb.bottom_right.x {
-        // for y in 0..image.height() {
-        //     for x in 0..image.width() {
-                let p = Point {x: x as i32, y: y as i32};
+                let p = Point {
+                    x: x as i32,
+                    y: y as i32,
+                };
                 if primitive.is_inside_primitive(p) {
-                    *image.get_pixel_mut(x as u32, y as u32) = Geometrify::mix_color(primitive.get_color().expect("color of triangle not set"), *image.get_pixel(x as u32, y as u32));
+                    *image.get_pixel_mut(x as u32, y as u32) =
+                        Geometrify::mix_color(
+                            primitive.get_color().expect("color of triangle not set"),
+                            *image.get_pixel(x as u32, y as u32),
+                        );
                 }
             }
         }
@@ -220,35 +242,53 @@ impl Geometrify {
         d as u32
     }
 
-    fn calculate_difference(original: &RgbaImage, current: &RgbaImage, diff_lut: &Vec<u64>, primitive: &Primitive) -> u64 {
+    fn calculate_difference(original: &RgbaImage,
+                            current: &RgbaImage,
+                            diff_lut: &Vec<u64>,
+                            primitive: &Primitive)
+                            -> u64 {
         let bb = primitive.bounding_box();
 
         // Use LUT to calculate difference outside of the BB
         // TODO: Check whether indices are correct!
         let mut d = diff_lut[diff_lut.len() - 1];
         if bb.bottom_right.y > 0 && bb.bottom_right.x > 0 {
-            d -= diff_lut[((bb.bottom_right.y - 1) as u32 * current.width() + bb.bottom_right.x as u32 - 1) as usize];
+            d -= diff_lut[((bb.bottom_right.y - 1) as u32 * current.width() +
+             bb.bottom_right.x as u32 - 1) as usize];
         }
         if bb.top_left.y > 0 && bb.bottom_right.x > 0 {
-            d += diff_lut[((bb.top_left.y - 1) as u32 * current.width() + bb.bottom_right.x as u32 - 1) as usize];
+            d += diff_lut[((bb.top_left.y - 1) as u32 * current.width() +
+             bb.bottom_right.x as u32 - 1) as usize];
         }
         if bb.bottom_right.y > 0 && bb.top_left.x > 0 {
-            d += diff_lut[((bb.bottom_right.y - 1) as u32 * current.width() + bb.top_left.x as u32 - 1) as usize];
+            d += diff_lut[((bb.bottom_right.y - 1) as u32 * current.width() +
+             bb.top_left.x as u32 - 1) as usize];
         }
         if bb.top_left.y > 0 && bb.top_left.x > 0 {
-            d -= diff_lut[((bb.top_left.y - 1) as u32 * current.width() + bb.top_left.x as u32 - 1) as usize];
+            d -= diff_lut[((bb.top_left.y - 1) as u32 * current.width() +
+             bb.top_left.x as u32 - 1) as usize];
         }
 
         for y in bb.top_left.y..bb.bottom_right.y {
             for x in bb.top_left.x..bb.bottom_right.x {
                 let original_rgb = original.get_pixel(x as u32, y as u32);
-                let result_rgb = if (bb.top_left.x as u32 <= x as u32) && (x as u32 <= bb.bottom_right.x as u32)
-                    && (bb.top_left.y as u32 <= y as u32) && (y as u32 <= bb.bottom_right.y as u32)
-                    && (primitive.is_inside_primitive(Point { x: x as i32, y: y as i32 })) {
-                        Geometrify::mix_color(*current.get_pixel(x as u32, y as u32), primitive.get_color().expect("triangle color not "))
-                    } else {
-                        *current.get_pixel(x as u32, y as u32)
-                    };
+                let result_rgb = if (bb.top_left.x as u32 <= x as u32) &&
+                                    (x as u32 <= bb.bottom_right.x as u32) &&
+                                    (bb.top_left.y as u32 <= y as u32) &&
+                                    (y as u32 <= bb.bottom_right.y as u32) &&
+                                    (primitive.is_inside_primitive(
+                    Point {
+                        x: x as i32,
+                        y: y as i32,
+                    }
+                )) {
+                    Geometrify::mix_color(
+                        *current.get_pixel(x as u32, y as u32),
+                        primitive.get_color().expect("triangle color not "),
+                    )
+                } else {
+                    *current.get_pixel(x as u32, y as u32)
+                };
 
                 d += Geometrify::difference(*original_rgb, result_rgb) as u64;
             }
@@ -262,7 +302,8 @@ impl Geometrify {
 
         for y in 0..a.height() {
             for x in 0..a.width() {
-                let mut ldiff = Geometrify::difference(*a.get_pixel(x, y), *b.get_pixel(x, y)) as u64;
+                let mut ldiff = Geometrify::difference(*a.get_pixel(x, y), *b.get_pixel(x, y)) as
+                                u64;
                 if x > 0 {
                     ldiff += result[(y * a.width() + x - 1) as usize];
                 }
@@ -280,7 +321,11 @@ impl Geometrify {
         result
     }
 
-    pub fn apply(&mut self, image: RgbaImage, number_of_iterations: i32, number_of_samples: i32) -> RgbaImage {
+    pub fn apply(&mut self,
+                 image: RgbaImage,
+                 number_of_iterations: i32,
+                 number_of_samples: i32)
+                 -> RgbaImage {
         let mut progress = ProgressBar::new(number_of_iterations as u64);
         progress.format("|#--|");
 
@@ -290,34 +335,45 @@ impl Geometrify {
             let difference_lut = Geometrify::calculate_difference_lut(&image, &destination);
 
             let primitives = (0..number_of_samples)
-                .map(|_| {
-                    self.generate_primitive()
-                })
-                .map(|mut p| {
-                    p.span_div_save();
-                    p
-                }).collect::<Vec<Triangle>>();
-            let min_primitive = primitives.par_iter()
-                .map(|primitive| {
-                    let mut prim = *primitive;
-                    prim.color = Some(Geometrify::calculate_color(&image, &prim));
-                    (prim, Geometrify::calculate_difference(&image, &destination, &difference_lut, &prim))
-                })
+                .map(|_| self.generate_primitive())
+                .map(
+                    |mut p| {
+                        p.span_div_save();
+                        p
+                    }
+                )
+                .collect::<Vec<Triangle>>();
+            let min_primitive = primitives
+                .par_iter()
+                .map(
+                    |primitive| {
+                        let mut prim = *primitive;
+                        prim.color = Some(Geometrify::calculate_color(&image, &prim));
+                        (prim,
+                         Geometrify::calculate_difference(
+                            &image,
+                            &destination,
+                            &difference_lut,
+                            &prim,
+                        ))
+                    }
+                )
                 .min_by_key(|tup| tup.1);
 
-            Geometrify::add_to_image(&mut destination, &min_primitive.expect("no fitting triangle found").0);
+            Geometrify::add_to_image(
+                &mut destination,
+                &min_primitive.expect("no fitting triangle found").0,
+            );
             progress.inc();
         }
         progress.finish_print("done");
 
         destination
     }
-
 }
 
 #[cfg(test)]
 mod tests {
     #[test]
-    fn it_works() {
-    }
+    fn it_works() {}
 }
