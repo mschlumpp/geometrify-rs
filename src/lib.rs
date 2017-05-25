@@ -12,13 +12,13 @@ use rand::Rng;
 use rayon::prelude::*;
 
 #[derive(Clone, Copy, Debug)]
-struct Point {
+pub struct Point {
     x: i32,
     y: i32,
 }
 
 impl Point {
-    fn cross_product(&self, b: Point) -> i32 {
+    pub fn cross_product(&self, b: Point) -> i32 {
         self.x * b.y - self.y * b.x
     }
 }
@@ -125,7 +125,7 @@ impl Primitive for Triangle {
     }
 }
 
-trait PointGenerator {
+pub trait PointGenerator {
     fn next_point(&mut self, width: u32, height: u32) -> Point;
 }
 
@@ -149,13 +149,13 @@ impl PointGenerator for RandomPointGenerator {
 }
 
 pub struct Geometrify {
-    point_gen: Box<RandomPointGenerator>,
+    point_gen: Box<PointGenerator>,
     iterations: u32,
     samples: u32,
 }
 
 impl Geometrify {
-    pub fn new(point_gen: Box<RandomPointGenerator>, iterations: u32, samples: u32) -> Geometrify {
+    pub fn new(point_gen: Box<PointGenerator>, iterations: u32, samples: u32) -> Geometrify {
         Geometrify {
             point_gen: point_gen,
             iterations: iterations,
