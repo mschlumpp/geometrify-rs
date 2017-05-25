@@ -125,35 +125,37 @@ impl Primitive for Triangle {
     }
 }
 
+trait PointGenerator {
+    fn next_point(&mut self, width: u32, height: u32) -> Point;
+}
+
 pub struct RandomPointGenerator {
     rng: Box<Rng>,
-    width: i32,
-    height: i32,
 }
 
 impl RandomPointGenerator {
-    pub fn new(width: i32, height: i32) -> RandomPointGenerator {
+    pub fn new() -> RandomPointGenerator {
         RandomPointGenerator {
             rng: Box::new(rand::thread_rng()),
-            width: width,
-            height: height,
         }
     }
+}
 
-    fn next_point(&mut self) -> Point {
+impl PointGenerator for RandomPointGenerator {
+    fn next_point(&mut self, width: u32, height: u32) -> Point {
         Point {
-            x: self.rng.gen_range(0, self.width),
-            y: self.rng.gen_range(0, self.height),
+            x: self.rng.gen_range(0, width as i32),
+            y: self.rng.gen_range(0, height as i32),
         }
     }
 }
 
 pub struct Geometrify {
-    point_gen: RandomPointGenerator,
+    point_gen: Box<RandomPointGenerator>,
 }
 
 impl Geometrify {
-    pub fn new(point_gen: RandomPointGenerator) -> Geometrify {
+    pub fn new(point_gen: Box<RandomPointGenerator>) -> Geometrify {
         Geometrify { point_gen: point_gen }
     }
 
@@ -189,11 +191,11 @@ impl Geometrify {
         }
     }
 
-    fn generate_primitive(&mut self) -> Triangle {
+    fn generate_primitive(&mut self, width: u32, height: u32) -> Triangle {
         Triangle::new(
-            self.point_gen.next_point(),
-            self.point_gen.next_point(),
-            self.point_gen.next_point(),
+            self.point_gen.next_point(width, height),
+            self.point_gen.next_point(width, height),
+            self.point_gen.next_point(width, height),
         )
     }
 
@@ -335,7 +337,7 @@ impl Geometrify {
             let difference_lut = Geometrify::calculate_difference_lut(&image, &destination);
 
             let primitives = (0..number_of_samples)
-                .map(|_| self.generate_primitive())
+                .map(|_| self.generate_primitive(image.width(), image.height()))
                 .map(
                     |mut p| {
                         p.span_div_save();

@@ -48,10 +48,9 @@ fn main() {
         .expect("Can't open source file");
     let sourcebuf = source.to_rgba();
 
-    let mut filter =
-        Geometrify::new(
-            RandomPointGenerator::new(sourcebuf.width() as i32, sourcebuf.height() as i32),
-        );
+
+    let pointgen = Box::new(RandomPointGenerator::new());
+    let mut filter = Geometrify::new(pointgen);
 
 
     let outputbuf = filter.apply(
