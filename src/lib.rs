@@ -5,6 +5,8 @@ extern crate pbr;
 
 pub mod geometrify;
 
+
+use image::RgbaImage;
 use rand::Rng;
 
 #[derive(Clone, Copy, Debug)]
@@ -52,6 +54,10 @@ impl PointGenerator for RandomPointGenerator {
             y: self.rng.gen_range(0, height as i32),
         }
     }
+}
+
+pub trait Filter {
+    fn apply(&mut self, image: &RgbaImage) -> RgbaImage;
 }
 
 #[cfg(test)]

@@ -1,4 +1,4 @@
-use super::{Point, BoundingBox, PointGenerator};
+use super::{Point, BoundingBox, PointGenerator, Filter};
 use image::{Rgba, RgbaImage, Pixel};
 
 use pbr::ProgressBar;
@@ -287,8 +287,10 @@ impl Geometrify {
 
         result
     }
+}
 
-    pub fn apply(&mut self, image: RgbaImage) -> RgbaImage {
+impl Filter for Geometrify {
+    fn apply(&mut self, image: &RgbaImage) -> RgbaImage {
         let mut progress = ProgressBar::new(self.iterations as u64);
         progress.format("|#--|");
 

@@ -5,7 +5,7 @@ extern crate clap;
 
 use clap::{Arg, App, AppSettings};
 
-use geometrify::RandomPointGenerator;
+use geometrify::{RandomPointGenerator, Filter};
 use geometrify::geometrify::Geometrify;
 
 use image::open;
@@ -67,7 +67,7 @@ fn main() {
     );
 
 
-    let outputbuf = filter.apply(sourcebuf);
+    let outputbuf = filter.apply(&sourcebuf);
 
     outputbuf
         .save(&Path::new(matches.value_of("OUTPUT").expect("expected output file")))
