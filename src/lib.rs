@@ -69,7 +69,7 @@ pub trait ProgressReporter {
 
 pub struct SilentProgressReporter;
 
-impl ProgressReporter {
+impl SilentProgressReporter {
     pub fn new() -> SilentProgressReporter {
         SilentProgressReporter { }
     }

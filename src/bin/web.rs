@@ -15,7 +15,7 @@ use rocket::Data;
 
 use std::io::Read;
 
-use geometrify::{Filter, RandomPointGenerator};
+use geometrify::{Filter, SilentProgressReporter, RandomPointGenerator};
 use geometrify::geometrify::Geometrify;
 
 #[get("/")]
@@ -37,7 +37,8 @@ fn geometrify_process(data: Data) -> &'static str {
         6,
     );
 
-    let out = filter.apply(&image);
+    let mut progress = SilentProgressReporter::new();
+    let out = filter.apply(&image, &mut progress);
 
     "ok"
 }
