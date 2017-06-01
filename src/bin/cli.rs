@@ -7,15 +7,51 @@
 extern crate geometrify;
 extern crate image;
 extern crate clap;
-
+extern crate pbr;
 
 use clap::{Arg, App, AppSettings};
 
-use geometrify::{RandomPointGenerator, Filter};
+use geometrify::{ProgressReporter, RandomPointGenerator, Filter};
 use geometrify::geometrify::Geometrify;
 
 use image::open;
 use std::path::Path;
+use std::io::Stdout;
+
+use pbr::ProgressBar;
+
+struct PbrProgressReporter {
+    bar: Option<ProgressBar<Stdout>>,
+}
+
+impl PbrProgressReporter {
+    fn new() -> PbrProgressReporter {
+        PbrProgressReporter {
+            bar: None,
+        }
+    }
+}
+
+impl ProgressReporter for PbrProgressReporter {
+    fn init(&mut self, steps: u64) {
+        let mut progress = ProgressBar::new(steps);
+        progress.format("|#--|");
+        self.bar = Some(progress);
+    }
+
+    fn step(&mut self) {
+        let ref mut bar = self.bar.as_mut().expect("ProgressReporter was not initialized");
+        bar.inc();
+    }
+
+    fn finish(&mut self) {
+        {
+            let ref mut bar = self.bar.as_mut().expect("ProgressReporter was not initialized");
+            bar.finish();
+        }
+        self.bar = None;
+    }
+}
 
 fn main() {
     let matches = App::new("Geometrify Filter")
@@ -72,8 +108,8 @@ fn main() {
             .expect("invalid samples parameter"),
     );
 
-
-    let outputbuf = filter.apply(&sourcebuf);
+    let mut progress = PbrProgressReporter::new();
+    let outputbuf = filter.apply(&sourcebuf, &mut progress);
 
     outputbuf
         .save(&Path::new(matches.value_of("OUTPUT").expect("expected output file")))

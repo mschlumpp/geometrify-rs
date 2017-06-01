@@ -4,10 +4,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-use super::{Point, BoundingBox, PointGenerator, Filter};
+use super::{Point, BoundingBox, PointGenerator, Filter, ProgressReporter};
 use image::{Rgba, RgbaImage, Pixel};
-
-use pbr::ProgressBar;
 
 use rayon::prelude::*;
 
@@ -296,9 +294,8 @@ impl Geometrify {
 }
 
 impl Filter for Geometrify {
-    fn apply(&mut self, image: &RgbaImage) -> RgbaImage {
-        let mut progress = ProgressBar::new(self.iterations as u64);
-        progress.format("|#--|");
+    fn apply(&mut self, image: &RgbaImage, progress: &mut ProgressReporter) -> RgbaImage {
+        progress.init(self.iterations as u64);
 
         let mut destination = RgbaImage::new(image.width(), image.height());
 
@@ -335,9 +332,9 @@ impl Filter for Geometrify {
                 &mut destination,
                 &min_primitive.expect("no fitting triangle found").0,
             );
-            progress.inc();
+            progress.step();
         }
-        progress.finish_print("done");
+        progress.finish();
 
         destination
     }

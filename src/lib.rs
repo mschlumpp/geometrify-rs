@@ -7,7 +7,6 @@
 extern crate image;
 extern crate rand;
 extern crate rayon;
-extern crate pbr;
 
 pub mod geometrify;
 
@@ -62,8 +61,28 @@ impl PointGenerator for RandomPointGenerator {
     }
 }
 
+pub trait ProgressReporter {
+    fn init(&mut self, count: u64);
+    fn step(&mut self);
+    fn finish(&mut self);
+}
+
+pub struct SilentProgressReporter;
+
+impl ProgressReporter {
+    pub fn new() -> SilentProgressReporter {
+        SilentProgressReporter { }
+    }
+}
+
+impl ProgressReporter for SilentProgressReporter {
+    fn init(&mut self, _: u64) { }
+    fn step(&mut self) { }
+    fn finish(&mut self) { }
+}
+
 pub trait Filter {
-    fn apply(&mut self, image: &RgbaImage) -> RgbaImage;
+    fn apply(&mut self, image: &RgbaImage, progress: &mut ProgressReporter) -> RgbaImage;
 }
 
 #[cfg(test)]
