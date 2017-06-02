@@ -62,9 +62,24 @@ impl Triangle {
 
 impl Primitive for Triangle {
     fn is_inside_primitive(&self, p: Point) -> bool {
-        return (self.a.x - self.b.x) * (p.y - self.a.y) - (self.a.y - self.b.y) * (p.x - self.a.x) > 0 &&
-               (self.b.x - self.c.x) * (p.y - self.b.y) - (self.b.y - self.c.y) * (p.x - self.b.x) > 0 &&
-               (self.c.x - self.a.x) * (p.y - self.c.y) - (self.c.y - self.a.y) * (p.x - self.c.x) > 0;
+        let span_a = Point {
+            x: self.b.x - self.a.x,
+            y: self.b.y - self.a.y,
+        };
+        let span_b = Point {
+            x: self.c.x - self.a.x,
+            y: self.c.y - self.a.y,
+        };
+
+        let q = Point {
+            x: p.x - self.a.x,
+            y: p.y - self.a.y,
+        };
+
+        let s = q.cross_product(span_b) as f32 * self.span_div();
+        let t = span_a.cross_product(q) as f32 * self.span_div();
+
+        (s >= 0.0) && (t >= 0.0) && ((s + t) <= 1.0)
     }
 
     fn bounding_box(&self) -> BoundingBox {
