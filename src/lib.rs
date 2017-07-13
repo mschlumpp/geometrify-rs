@@ -71,14 +71,14 @@ pub struct SilentProgressReporter;
 
 impl SilentProgressReporter {
     pub fn new() -> SilentProgressReporter {
-        SilentProgressReporter { }
+        SilentProgressReporter {}
     }
 }
 
 impl ProgressReporter for SilentProgressReporter {
-    fn init(&mut self, _: u64) { }
-    fn step(&mut self) { }
-    fn finish(&mut self) { }
+    fn init(&mut self, _: u64) {}
+    fn step(&mut self) {}
+    fn finish(&mut self) {}
 }
 
 pub trait Filter {

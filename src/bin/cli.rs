@@ -15,8 +15,8 @@ use geometrify::{ProgressReporter, RandomPointGenerator, Filter};
 use geometrify::geometrify::Geometrify;
 
 use image::open;
-use std::path::Path;
 use std::io::Stdout;
+use std::path::Path;
 
 use pbr::ProgressBar;
 
@@ -26,9 +26,7 @@ struct PbrProgressReporter {
 
 impl PbrProgressReporter {
     fn new() -> PbrProgressReporter {
-        PbrProgressReporter {
-            bar: None,
-        }
+        PbrProgressReporter { bar: None }
     }
 }
 
@@ -40,13 +38,17 @@ impl ProgressReporter for PbrProgressReporter {
     }
 
     fn step(&mut self) {
-        let ref mut bar = self.bar.as_mut().expect("ProgressReporter was not initialized");
+        let ref mut bar = self.bar
+            .as_mut()
+            .expect("ProgressReporter was not initialized");
         bar.inc();
     }
 
     fn finish(&mut self) {
         {
-            let ref mut bar = self.bar.as_mut().expect("ProgressReporter was not initialized");
+            let ref mut bar = self.bar
+                .as_mut()
+                .expect("ProgressReporter was not initialized");
             bar.finish();
         }
         self.bar = None;
@@ -61,13 +63,13 @@ fn main() {
             Arg::with_name("INPUT")
                 .required(true)
                 .help("Input file")
-                .index(1)
+                .index(1),
         )
         .arg(
             Arg::with_name("OUTPUT")
                 .required(true)
                 .help("Output file")
-                .index(2)
+                .index(2),
         )
         .arg(
             Arg::with_name("samples")
@@ -75,7 +77,7 @@ fn main() {
                 .long("samples")
                 .help("Number of primitives to select from")
                 .default_value("50")
-                .takes_value(true)
+                .takes_value(true),
         )
         .arg(
             Arg::with_name("iterations")
@@ -83,13 +85,14 @@ fn main() {
                 .long("iterations")
                 .default_value("100")
                 .help("Number of primitives to place")
-                .takes_value(true)
+                .takes_value(true),
         )
         .get_matches();
 
 
-    let source = open(&Path::new(matches.value_of("INPUT").expect("expected input file")))
-        .expect("Can't open source file");
+    let source = open(&Path::new(
+        matches.value_of("INPUT").expect("expected input file"),
+    )).expect("Can't open source file");
     let sourcebuf = source.to_rgba();
 
 
@@ -112,6 +115,8 @@ fn main() {
     let outputbuf = filter.apply(&sourcebuf, &mut progress);
 
     outputbuf
-        .save(&Path::new(matches.value_of("OUTPUT").expect("expected output file")))
+        .save(&Path::new(
+            matches.value_of("OUTPUT").expect("expected output file"),
+        ))
         .expect("Can't save image");
 }
