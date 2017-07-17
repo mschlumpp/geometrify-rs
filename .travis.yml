@@ -1,0 +1,15 @@
+language: rust
+rust:
+  - nightly
+
+script:
+  - cargo test
+  - rustup target add x86_64-unknown-linux-musl
+  - cargo build --release --target=x86_64-unknown-linux-musl
+
+deploy:
+  provider: releases
+  skip_cleanup: true
+  api_key:
+    secure: $apikey
+  file: "target/x86_64-unknown-linux-musl/release/cli"
