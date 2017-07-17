@@ -9,6 +9,7 @@ before_install:
   - sudo apt-get install mingw-w64
 
 script:
+  - mkdir -p target/x86_64-unknown-linux-musl/release/{cli,geometrify-linux64} && mkdir -p target/x86_64-pc-windows-gnu/release/{cli,geometrify-linux64}
   - cargo test
   - rustup target add x86_64-unknown-linux-musl
   - rustup target add x86_64-pc-windows-gnu
