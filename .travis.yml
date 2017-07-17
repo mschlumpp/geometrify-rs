@@ -1,15 +1,26 @@
+sudo: required
 language: rust
 rust:
   - nightly
 
+before_install:
+  - sudo apt-get update
+  - sudo apt-get install mingw-w64
+
 script:
   - cargo test
   - rustup target add x86_64-unknown-linux-musl
+  - rustup target add x86_64-pc-windows-gnu
   - cargo build --release --target=x86_64-unknown-linux-musl
+  - mv target/x86_64-unknown-linux-musl/release/{cli,geometrify-linux64}
+  - cargo build --release --target=x86_64-pc-windows-gnu
+  - mv target/x86_64-pc-windows-gnu/release/{cli,geometrify-win64}
 
 deploy:
   provider: releases
   skip_cleanup: true
   api_key:
     secure: $apikey
-  file: "target/x86_64-unknown-linux-musl/release/cli"
+  file:
+    - "target/x86_64-unknown-linux-musl/release/geometrify-linux64"
+    - "target/x86_64-pc-windows-gnu/release/geometrify-win64"
