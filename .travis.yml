@@ -7,6 +7,7 @@ rust:
 before_install:
   - sudo apt-get update
   - sudo apt-get install mingw-w64
+  - mkdir -p ~/.cargo/ && echo -e "[target.x86_64-pc-windows-gnu]\nlinker = \"/usr/bin/x86_64-w64-mingw32-gcc\"" >> ~/.cargo/config
 
 script:
   - mkdir -p target/x86_64-unknown-linux-musl/release/ && mkdir -p target/x86_64-pc-windows-gnu/release/
