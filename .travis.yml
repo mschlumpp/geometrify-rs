@@ -24,6 +24,8 @@ deploy:
   skip_cleanup: true
   api_key:
     secure: $apikey
+  on:
+    tags: true
   file:
     - "target/x86_64-unknown-linux-musl/release/geometrify-linux64"
     - "target/x86_64-pc-windows-gnu/release/geometrify-win64.exe"
