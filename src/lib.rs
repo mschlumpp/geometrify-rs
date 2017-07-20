@@ -84,9 +84,3 @@ impl ProgressReporter for SilentProgressReporter {
 pub trait Filter {
     fn apply(&mut self, image: &RgbaImage, progress: &mut ProgressReporter) -> RgbaImage;
 }
-
-#[cfg(test)]
-mod tests {
-    #[test]
-    fn it_works() {}
-}
