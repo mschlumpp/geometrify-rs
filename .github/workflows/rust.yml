@@ -1,0 +1,42 @@
+name: Rust
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+    - name: Install latest nightly
+      uses: actions-rs/toolchain@v1
+      with:
+        toolchain: nightly
+        override: true
+        components: clippy
+        target: x86_64-unknown-linux-musl,x86_64-pc-windows-msvc
+    - uses: actions-rs/clippy-check@v1
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+        args: --all-features
+    - name: Build Windows binaries
+      run: cargo build --verbose --release --target=x86_64-pc-windows-msvc
+    - name: Build Linux binaries
+      run: cargo build --verbose --release --target=x86_64-unknown-linux-musl
+    - name: Upload resulting binary
+      uses: actions/upload-artifact@v3.1.0
+      with:
+        name: cli
+        path: target/x86_64-unknown-linux-musl/release/cli
+    - name: Upload resulting binary
+      uses: actions/upload-artifact@v3.1.0
+      with:
+        name: cli.exe
+        path: target/x86_64-pc-windows-msvc/release/cli.exe
