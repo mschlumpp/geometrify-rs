@@ -37,7 +37,7 @@ pub trait PointGenerator {
 }
 
 pub struct RandomPointGenerator {
-    rng: Box<Rng>,
+    rng: Box<dyn Rng>,
 }
 
 impl RandomPointGenerator {
@@ -82,5 +82,5 @@ impl ProgressReporter for SilentProgressReporter {
 }
 
 pub trait Filter {
-    fn apply(&mut self, image: &RgbaImage, progress: &mut ProgressReporter) -> RgbaImage;
+    fn apply(&mut self, image: &RgbaImage, progress: &mut dyn ProgressReporter) -> RgbaImage;
 }

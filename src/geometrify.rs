@@ -93,13 +93,13 @@ impl Primitive for Triangle {
 }
 
 pub struct Geometrify {
-    point_gen: Box<PointGenerator>,
+    point_gen: Box<dyn PointGenerator>,
     iterations: u32,
     samples: u32,
 }
 
 impl Geometrify {
-    pub fn new(point_gen: Box<PointGenerator>, iterations: u32, samples: u32) -> Geometrify {
+    pub fn new(point_gen: Box<dyn PointGenerator>, iterations: u32, samples: u32) -> Geometrify {
         Geometrify {
             point_gen: point_gen,
             iterations: iterations,
@@ -115,7 +115,7 @@ impl Geometrify {
         self.samples = samples
     }
 
-    fn calculate_color(image: &RgbaImage, primitive: &Primitive) -> Rgba<u8> {
+    fn calculate_color(image: &RgbaImage, primitive: &dyn Primitive) -> Rgba<u8> {
         let bb = primitive.bounding_box();
 
         let mut count = 0u64;
@@ -155,7 +155,7 @@ impl Geometrify {
         )
     }
 
-    fn add_to_image(image: &mut RgbaImage, primitive: &Primitive) {
+    fn add_to_image(image: &mut RgbaImage, primitive: &dyn Primitive) {
         let bb = primitive.bounding_box();
 
         for y in bb.top_left.y..bb.bottom_right.y {
@@ -179,10 +179,10 @@ impl Geometrify {
         let (r2, g2, b2, a2) = second.channels4();
 
         Rgba::from_channels(
-            (((r1 as u32 + r2 as u32) / 2) as u8),
-            (((g1 as u32 + g2 as u32) / 2) as u8),
-            (((b1 as u32 + b2 as u32) / 2) as u8),
-            (((a1 as u32 + a2 as u32) / 2) as u8),
+            ((r1 as u32 + r2 as u32) / 2) as u8,
+            ((g1 as u32 + g2 as u32) / 2) as u8,
+            ((b1 as u32 + b2 as u32) / 2) as u8,
+            ((a1 as u32 + a2 as u32) / 2) as u8,
         )
     }
 
@@ -203,7 +203,7 @@ impl Geometrify {
         original: &RgbaImage,
         current: &RgbaImage,
         total_difference: u64,
-        primitive: &Primitive,
+        primitive: &dyn Primitive,
     ) -> u64 {
         let bb = primitive.bounding_box();
         let mut d: u64 = total_difference;
@@ -245,7 +245,7 @@ impl Geometrify {
 }
 
 impl Filter for Geometrify {
-    fn apply(&mut self, image: &RgbaImage, progress: &mut ProgressReporter) -> RgbaImage {
+    fn apply(&mut self, image: &RgbaImage, progress: &mut dyn ProgressReporter) -> RgbaImage {
         progress.init(self.iterations as u64);
 
         let mut destination = RgbaImage::new(image.width(), image.height());
