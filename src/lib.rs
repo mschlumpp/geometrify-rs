@@ -4,14 +4,10 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-extern crate image;
-extern crate rand;
-extern crate rayon;
-
 pub mod geometrify;
 
 use image::RgbaImage;
-use rand::Rng;
+use nanorand::{Rng, WyRand};
 
 #[derive(Clone, Copy, Debug)]
 pub struct Point {
@@ -36,14 +32,12 @@ pub trait PointGenerator {
 }
 
 pub struct RandomPointGenerator {
-    rng: Box<dyn Rng>,
+    rng: WyRand,
 }
 
 impl RandomPointGenerator {
     pub fn new() -> RandomPointGenerator {
-        RandomPointGenerator {
-            rng: Box::new(::rand::weak_rng()),
-        }
+        RandomPointGenerator { rng: WyRand::new() }
     }
 }
 
@@ -56,8 +50,8 @@ impl Default for RandomPointGenerator {
 impl PointGenerator for RandomPointGenerator {
     fn next_point(&mut self, width: u32, height: u32) -> Point {
         Point {
-            x: self.rng.gen_range(0, width as i32),
-            y: self.rng.gen_range(0, height as i32),
+            x: self.rng.generate_range(0..width as i32),
+            y: self.rng.generate_range(0..height as i32),
         }
     }
 }

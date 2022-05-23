@@ -5,7 +5,7 @@
  */
 
 use super::{BoundingBox, Filter, Point, PointGenerator, ProgressReporter};
-use image::{Pixel, Rgba, RgbaImage};
+use image::{Rgba, RgbaImage};
 
 use rayon::prelude::*;
 
@@ -126,24 +126,24 @@ impl Geometrify {
 
         for y in bb.top_left.y..bb.bottom_right.y {
             for x in bb.top_left.x..bb.bottom_right.x {
-                let (r, g, b, a) = image.get_pixel(x as u32, y as u32).channels4();
-                cr += r as u64;
-                cg += g as u64;
-                cb += b as u64;
-                ca += a as u64;
+                let Rgba([r, g, b, a]) = image.get_pixel(x as u32, y as u32);
+                cr += *r as u64;
+                cg += *g as u64;
+                cb += *b as u64;
+                ca += *a as u64;
                 count += 1;
             }
         }
 
         if count == 0 {
-            Rgba::from_channels(255, 255, 255, 255)
+            Rgba([255, 255, 255, 255])
         } else {
-            Rgba::from_channels(
+            Rgba([
                 (cr / count) as u8,
                 (cg / count) as u8,
                 (cb / count) as u8,
                 (ca / count) as u8,
-            )
+            ])
         }
     }
 
@@ -175,20 +175,20 @@ impl Geometrify {
     }
 
     fn mix_color(first: Rgba<u8>, second: Rgba<u8>) -> Rgba<u8> {
-        let (r1, g1, b1, a1) = first.channels4();
-        let (r2, g2, b2, a2) = second.channels4();
+        let Rgba([r1, g1, b1, a1]) = first;
+        let Rgba([r2, g2, b2, a2]) = second;
 
-        Rgba::from_channels(
+        Rgba([
             ((r1 as u32 + r2 as u32) / 2) as u8,
             ((g1 as u32 + g2 as u32) / 2) as u8,
             ((b1 as u32 + b2 as u32) / 2) as u8,
             ((a1 as u32 + a2 as u32) / 2) as u8,
-        )
+        ])
     }
 
     fn difference(first: Rgba<u8>, second: Rgba<u8>) -> u32 {
-        let (r1, g1, b1, a1) = first.channels4();
-        let (r2, g2, b2, a2) = second.channels4();
+        let Rgba([r1, g1, b1, a1]) = first;
+        let Rgba([r2, g2, b2, a2]) = second;
         let mut d = 0;
 
         d += i32::abs(r1 as i32 - r2 as i32) as u32;

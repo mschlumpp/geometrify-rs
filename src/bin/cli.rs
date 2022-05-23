@@ -9,7 +9,7 @@ extern crate geometrify;
 extern crate image;
 extern crate pbr;
 
-use clap::{App, AppSettings, Arg};
+use clap::{Arg, Command};
 
 use geometrify::geometrify::Geometrify;
 use geometrify::{Filter, ProgressReporter, RandomPointGenerator};
@@ -58,32 +58,26 @@ impl ProgressReporter for PbrProgressReporter {
 }
 
 fn main() {
-    let matches = App::new("Geometrify Filter")
+    let matches = Command::new("Geometrify Filter")
         .version("1.0")
-        .setting(AppSettings::ColorAlways)
+        .arg(Arg::new("INPUT").required(true).help("Input file").index(1))
         .arg(
-            Arg::with_name("INPUT")
-                .required(true)
-                .help("Input file")
-                .index(1),
-        )
-        .arg(
-            Arg::with_name("OUTPUT")
+            Arg::new("OUTPUT")
                 .required(true)
                 .help("Output file")
                 .index(2),
         )
         .arg(
-            Arg::with_name("samples")
-                .short("s")
+            Arg::new("samples")
+                .short('s')
                 .long("samples")
                 .help("Number of primitives to select from")
                 .default_value("50")
                 .takes_value(true),
         )
         .arg(
-            Arg::with_name("iterations")
-                .short("i")
+            Arg::new("iterations")
+                .short('i')
                 .long("iterations")
                 .default_value("100")
                 .help("Number of primitives to place")
@@ -95,7 +89,7 @@ fn main() {
         matches.value_of("INPUT").expect("expected input file"),
     ))
     .expect("Can't open source file");
-    let sourcebuf = source.to_rgba();
+    let sourcebuf = source.to_rgba8();
 
     let pointgen = Box::new(RandomPointGenerator::new());
     let mut filter = Geometrify::new(
