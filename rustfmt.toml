@@ -1,8 +1,0 @@
-array_layout = "Block"
-chain_indent = "Block"
-closure_block_indent_threshold = 2
-condense_wildcard_suffixes = true
-fn_args_paren_newline = false
-fn_call_style = "Block"
-reorder_imports = true
-reorder_imports_in_group = true
