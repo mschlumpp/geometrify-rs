@@ -49,9 +49,11 @@ impl Default for RandomPointGenerator {
 
 impl PointGenerator for RandomPointGenerator {
     fn next_point(&mut self, width: u32, height: u32) -> Point {
+        // nanorand seems to be broken as of 2022-05-23... When the range is specified in i32, then
+        // it will return -1 even if the lower bound is zero... WTF
         Point {
-            x: self.rng.generate_range(0..width as i32),
-            y: self.rng.generate_range(0..height as i32),
+            x: self.rng.generate_range(0..width) as i32,
+            y: self.rng.generate_range(0..height) as i32,
         }
     }
 }
