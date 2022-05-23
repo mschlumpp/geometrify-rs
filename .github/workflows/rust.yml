@@ -19,6 +19,7 @@ jobs:
       run: |
        rustup target add x86_64-pc-windows-gnu
        rustup target add x86_64-unknown-linux-musl
+       sudo apt-get install -y gcc-mingw-w64
     - uses: actions-rs/clippy-check@v1
       with:
         token: ${{ secrets.GITHUB_TOKEN }}
