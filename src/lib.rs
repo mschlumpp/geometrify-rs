@@ -10,7 +10,6 @@ extern crate rayon;
 
 pub mod geometrify;
 
-
 use image::RgbaImage;
 use rand::Rng;
 
@@ -42,7 +41,9 @@ pub struct RandomPointGenerator {
 
 impl RandomPointGenerator {
     pub fn new() -> RandomPointGenerator {
-        RandomPointGenerator { rng: Box::new(::rand::weak_rng()) }
+        RandomPointGenerator {
+            rng: Box::new(::rand::weak_rng()),
+        }
     }
 }
 
@@ -72,6 +73,12 @@ pub struct SilentProgressReporter;
 impl SilentProgressReporter {
     pub fn new() -> SilentProgressReporter {
         SilentProgressReporter {}
+    }
+}
+
+impl Default for SilentProgressReporter {
+    fn default() -> Self {
+        Self::new()
     }
 }
 

@@ -4,15 +4,15 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
+extern crate clap;
 extern crate geometrify;
 extern crate image;
-extern crate clap;
 extern crate pbr;
 
-use clap::{Arg, App, AppSettings};
+use clap::{App, AppSettings, Arg};
 
-use geometrify::{ProgressReporter, RandomPointGenerator, Filter};
 use geometrify::geometrify::Geometrify;
+use geometrify::{Filter, ProgressReporter, RandomPointGenerator};
 
 use image::open;
 use std::io::Stdout;
@@ -38,7 +38,8 @@ impl ProgressReporter for PbrProgressReporter {
     }
 
     fn step(&mut self) {
-        let ref mut bar = self.bar
+        let bar = &mut self
+            .bar
             .as_mut()
             .expect("ProgressReporter was not initialized");
         bar.inc();
@@ -46,7 +47,8 @@ impl ProgressReporter for PbrProgressReporter {
 
     fn finish(&mut self) {
         {
-            let ref mut bar = self.bar
+            let bar = &mut self
+                .bar
                 .as_mut()
                 .expect("ProgressReporter was not initialized");
             bar.finish();
@@ -89,12 +91,11 @@ fn main() {
         )
         .get_matches();
 
-
     let source = open(&Path::new(
         matches.value_of("INPUT").expect("expected input file"),
-    )).expect("Can't open source file");
+    ))
+    .expect("Can't open source file");
     let sourcebuf = source.to_rgba();
-
 
     let pointgen = Box::new(RandomPointGenerator::new());
     let mut filter = Geometrify::new(

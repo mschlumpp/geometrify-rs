@@ -4,8 +4,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-use super::{Point, BoundingBox, PointGenerator, Filter, ProgressReporter};
-use image::{Rgba, RgbaImage, Pixel};
+use super::{BoundingBox, Filter, Point, PointGenerator, ProgressReporter};
+use image::{Pixel, Rgba, RgbaImage};
 
 use rayon::prelude::*;
 
@@ -29,9 +29,9 @@ struct Triangle {
 impl Triangle {
     fn new(a: Point, b: Point, c: Point) -> Triangle {
         Triangle {
-            a: a,
-            b: b,
-            c: c,
+            a,
+            b,
+            c,
             color: None,
             span_div: None,
         }
@@ -62,15 +62,15 @@ impl Triangle {
 
 impl Primitive for Triangle {
     fn is_inside_primitive(&self, p: Point) -> bool {
-        return (self.a.x - self.b.x) * (p.y - self.a.y) -
-            (self.a.y - self.b.y) * (p.x - self.a.x) > 0 &&
-            (self.b.x - self.c.x) * (p.y - self.b.y) -
-                (self.b.y - self.c.y) * (p.x - self.b.x) > 0 &&
-            (self.c.x - self.a.x) * (p.y - self.c.y) - (self.c.y - self.a.y) * (p.x - self.c.x) > 0;
+        (self.a.x - self.b.x) * (p.y - self.a.y) - (self.a.y - self.b.y) * (p.x - self.a.x) > 0
+            && (self.b.x - self.c.x) * (p.y - self.b.y) - (self.b.y - self.c.y) * (p.x - self.b.x)
+                > 0
+            && (self.c.x - self.a.x) * (p.y - self.c.y) - (self.c.y - self.a.y) * (p.x - self.c.x)
+                > 0
     }
 
     fn bounding_box(&self) -> BoundingBox {
-        use std::cmp::{min, max};
+        use std::cmp::{max, min};
         BoundingBox {
             top_left: Point {
                 x: min(min(self.a.x, self.b.x), self.c.x),
@@ -101,9 +101,9 @@ pub struct Geometrify {
 impl Geometrify {
     pub fn new(point_gen: Box<dyn PointGenerator>, iterations: u32, samples: u32) -> Geometrify {
         Geometrify {
-            point_gen: point_gen,
-            iterations: iterations,
-            samples: samples,
+            point_gen,
+            iterations,
+            samples,
         }
     }
 
@@ -213,7 +213,7 @@ impl Geometrify {
                 let source_color = original.get_pixel(x as u32, y as u32);
                 let current_color = current.get_pixel(x as u32, y as u32);
 
-                if primitive.is_inside_primitive(Point { x: x, y: y }) {
+                if primitive.is_inside_primitive(Point { x, y }) {
                     let old_difference = Geometrify::difference(*source_color, *current_color);
                     d -= old_difference as u64;
 
@@ -249,7 +249,7 @@ impl Filter for Geometrify {
         progress.init(self.iterations as u64);
 
         let mut destination = RgbaImage::new(image.width(), image.height());
-        let mut total_difference = Geometrify::calculate_difference_image(&image, &destination);
+        let mut total_difference = Geometrify::calculate_difference_image(image, &destination);
 
         for _ in 0..self.iterations {
             let primitives = (0..self.samples)
@@ -263,11 +263,11 @@ impl Filter for Geometrify {
                 .par_iter()
                 .map(|primitive| {
                     let mut prim = *primitive;
-                    prim.color = Some(Geometrify::calculate_color(&image, &prim));
+                    prim.color = Some(Geometrify::calculate_color(image, &prim));
                     (
                         prim,
                         Geometrify::calculate_difference(
-                            &image,
+                            image,
                             &destination,
                             total_difference,
                             &prim,
