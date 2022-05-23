@@ -16,24 +16,3 @@ features = ["color"]
 
 [profile.release]
 lto = true
-
-# Web
-[dependencies.rocket]
-version = "^0.2.6"
-optional = true
-
-[dependencies.rocket_codegen]
-version = "^0.2.6"
-optional = true
-
-[features]
-web = ["rocket", "rocket_codegen"]
-
-[[bin]]
-name = "cli"
-path = "src/bin/cli.rs"
-
-[[bin]]
-name = "web"
-path = "src/bin/web.rs"
-required-features = ["web"]
